@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 const footerLinks = [
   { label: 'How it works', href: '#demo' },
   { label: 'About', href: '#' },
-  { label: 'Privacy', href: '#' },
   { label: 'FAQ', href: '#faq' }
 ];
 
