@@ -17,7 +17,7 @@ export default function DemoLanding({ onNavigate }: DemoLandingProps) {
       {/* Top label */}
       <div className="mb-4">
         <div 
-          className="text-[10px] tracking-[0.12em] uppercase mb-3"
+          className="text-[14px] tracking-[0.12em] uppercase mb-3"
           style={{ color: 'var(--text-muted)' }}
         >
           For the 1 in 8
