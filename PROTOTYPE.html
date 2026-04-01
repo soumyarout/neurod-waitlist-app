@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>NeuroD — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF8F4;
+    --white: #FFFFFF;
+    --purple: #6D28D9;
+    --purple-light: #EDE9FE;
+    --purple-mid: #8B5CF6;
+    --purple-deep: #5B21B6;
+    --teal: #0D9488;
+    --teal-light: #CCFBF1;
+    --amber: #D97706;
+    --amber-light: #FEF3C7;
+    --orange: #EA580C;
+    --rose: #BE185D;
+    --text-dark: #1C1917;
+    --text-mid: #44403C;
+    --text-soft: #78716C;
+    --text-muted: #A8A29E;
+    --border: #E7E5E4;
+    --border-soft: #F5F5F4;
+    --shadow: 0 2px 16px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.10);
+    --r: 14px;
+    --r-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'DM Sans', sans-serif; background: #1a1614; }
+  body { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 16px; }
+
+  #shell {
+    width: 100%; max-width: 420px; height: 100vh; max-height: 860px;
+    margin: 0 auto; position: relative; overflow: hidden;
+    background: var(--cream); border-radius: 24px;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+    display: flex; flex-direction: column;
+  }
+
+  /* Screens */
+  .screen {
+    position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden;
+    background: var(--cream);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease;
+    display: flex; flex-direction: column;
+  }
+  .screen.hidden { transform: translateX(100%); opacity: 0; pointer-events: none; }
+  .screen.prev { transform: translateX(-40%); opacity: 0; pointer-events: none; }
+
+  /* Nav */
+  .nav {
+    position: sticky; top: 0; z-index: 10;
+    background: rgba(250,248,244,0.92); backdrop-filter: blur(12px);
+    padding: 14px 20px 10px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-back {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--border-soft); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--text-mid); flex-shrink: 0;
+  }
+  .nav-back:hover { background: var(--border); }
+  .nav-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 400; color: var(--text-dark); }
+  .nav-step { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+
+  /* Celebration banner */
+  .celebration {
+    background: linear-gradient(90deg, #7C3AED11, #0D948811, #D9770611, #E85D2411);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 8px 20px;
+    display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-mid);
+  }
+  .celebration strong { color: var(--purple); font-weight: 500; }
+
+  /* Typography */
+  h1 { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 400; line-height: 1.25; color: var(--text-dark); }
+  h2 { font-family: 'Fraunces', serif; font-size: 21px; font-weight: 400; line-height: 1.3; color: var(--text-dark); }
+  h3 { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 400; color: var(--text-dark); }
+  p { font-size: 14px; line-height: 1.75; color: var(--text-mid); }
+  .small { font-size: 12px; color: var(--text-soft); line-height: 1.6; }
+  .muted { color: var(--text-muted); }
+
+  /* Buttons */
+  .btn-primary {
+    width: 100%; padding: 15px 20px; border-radius: var(--r);
+    background: var(--purple); color: white; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.01em;
+  }
+  .btn-primary:hover { background: var(--purple-deep); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(109,40,217,0.3); }
+  .btn-secondary {
+    width: 100%; padding: 13px 20px; border-radius: var(--r);
+    background: transparent; color: var(--purple); border: 1.5px solid var(--purple-mid);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-secondary:hover { background: var(--purple-light); }
+  .btn-ghost {
+    background: none; border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    color: var(--text-soft); padding: 8px 4px;
+  }
+  .btn-ghost:hover { color: var(--text-dark); }
+
+  /* Cards */
+  .card { background: white; border-radius: var(--r); border: 1px solid var(--border); padding: 18px; box-shadow: var(--shadow); }
+  .card-soft { background: var(--border-soft); border-radius: var(--r); padding: 16px; border: 1px solid var(--border); }
+
+  /* Pills */
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px; border-radius: 99px;
+    font-size: 12px; font-weight: 500; cursor: pointer;
+    border: 1.5px solid transparent; transition: all 0.18s; user-select: none;
+  }
+  .pill-outline { border-color: var(--border); color: var(--text-mid); background: white; }
+  .pill-outline:hover { border-color: var(--purple-mid); color: var(--purple); }
+  .pill-selected { border-color: var(--purple); color: var(--purple); background: var(--purple-light); }
+  .pill-teal { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
+
+  /* Mood grid */
+  .mood-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+  .mood-btn {
+    aspect-ratio: 1; border-radius: var(--r-sm); border: 1.5px solid var(--border);
+    background: white; cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 3px; transition: all 0.18s; font-size: 20px;
+  }
+  .mood-btn span { font-size: 10px; color: var(--text-muted); }
+  .mood-btn:hover { border-color: var(--purple-mid); transform: scale(1.05); }
+  .mood-btn.selected { border-color: var(--purple); background: var(--purple-light); }
+
+  /* Pulse grid — 3x3 */
+  .pulse-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+  .pulse-btn {
+    aspect-ratio: 1; border-radius: 12px; border: 1.5px solid var(--border);
+    background: white; cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px; transition: all 0.2s; font-size: 28px;
+  }
+  .pulse-btn .pulse-label { font-size: 11px; color: var(--text-soft); font-weight: 400; }
+  .pulse-btn:hover { border-color: var(--purple-mid); transform: scale(1.04); background: var(--purple-light); }
+  .pulse-btn:active { transform: scale(0.97); }
+
+  /* Sleep track */
+  .sleep-track { display: flex; gap: 6px; justify-content: space-between; }
+  .sleep-btn {
+    flex: 1; padding: 9px 2px; border-radius: var(--r-sm);
+    border: 1.5px solid var(--border); background: white; cursor: pointer;
+    font-size: 12px; color: var(--text-soft); text-align: center; transition: all 0.18s;
+  }
+  .sleep-btn:hover { border-color: var(--teal); color: var(--teal); }
+  .sleep-btn.selected { border-color: var(--teal); background: var(--teal-light); color: var(--teal); }
+
+  /* Toggle row */
+  .toggle-row { display: flex; gap: 6px; }
+  .toggle-btn {
+    flex: 1; padding: 9px 8px; border-radius: var(--r-sm);
+    border: 1.5px solid var(--border); background: white; cursor: pointer;
+    font-size: 12px; color: var(--text-soft); text-align: center; transition: all 0.18s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .toggle-btn:hover { border-color: var(--teal); }
+  .toggle-btn.selected { border-color: var(--teal); background: var(--teal-light); color: var(--teal); font-weight: 500; }
+
+  /* Progress dots */
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin: 8px 0; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); transition: all 0.2s; }
+  .dot.active { width: 20px; border-radius: 3px; background: var(--purple); }
+  .dot.done { background: var(--purple-light); border: 1px solid var(--purple); }
+
+  /* Strength tags */
+  .strength-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .strength-tag {
+    padding: 5px 10px; border-radius: 99px; font-size: 11px; font-weight: 500;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .st-purple { background: var(--purple-light); color: var(--purple); }
+  .st-teal { background: var(--teal-light); color: var(--teal); }
+  .st-amber { background: var(--amber-light); color: var(--amber); }
+  .st-rose { background: #FCE7F3; color: var(--rose); }
+
+  /* Signal chip */
+  .signal-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 99px; font-size: 11px; font-weight: 500;
+  }
+  .sc-good { background: var(--teal-light); color: var(--teal); }
+  .sc-watch { background: var(--amber-light); color: var(--amber); }
+  .sc-act { background: #FFEDD5; color: var(--orange); }
+
+  /* Causal chain */
+  .causal-step {
+    display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  }
+  .causal-node {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .causal-arrow { margin-left: 14px; font-size: 16px; color: var(--text-muted); line-height: 1; }
+  .causal-label { font-size: 12px; color: var(--text-mid); flex: 1; }
+  .causal-lag { font-size: 10px; color: var(--teal); font-weight: 500; background: var(--teal-light); padding: 2px 6px; border-radius: 4px; }
+
+  /* Chat */
+  .bubble-ai {
+    background: white; border: 1px solid var(--border);
+    border-radius: 16px 16px 16px 4px; padding: 12px 14px;
+    font-size: 13px; line-height: 1.65; color: var(--text-mid); max-width: 88%;
+  }
+  .bubble-user {
+    background: var(--purple); border-radius: 16px 16px 4px 16px;
+    padding: 10px 14px; font-size: 13px; line-height: 1.55; color: white;
+    max-width: 80%; margin-left: auto;
+  }
+  .typing-dots { display: flex; gap: 4px; padding: 12px 14px; }
+  .typing-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); animation: bounce 1.2s ease-in-out infinite; }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-6px);opacity:1} }
+
+  /* Intervention cards */
+  .intervention { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; background: white; margin-bottom: 10px; }
+  .int-head { padding: 13px 15px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: background 0.15s; }
+  .int-head:hover { background: var(--border-soft); }
+  .int-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+  .int-title { font-size: 13px; font-weight: 500; color: var(--text-dark); flex: 1; }
+  .int-effort { font-size: 10px; padding: 2px 7px; border-radius: 99px; }
+  .eff-low { background: var(--teal-light); color: var(--teal); }
+  .eff-mid { background: var(--amber-light); color: var(--amber); }
+  .int-body { padding: 0 15px 13px; font-size: 12px; color: var(--text-soft); line-height: 1.65; display: none; }
+  .int-body.open { display: block; }
+
+  /* Tab bar */
+  .tab-bar {
+    display: flex; border-top: 1px solid var(--border);
+    background: rgba(250,248,244,0.96); backdrop-filter: blur(8px);
+    padding: 8px 0 4px; flex-shrink: 0; position: sticky; bottom: 0;
+  }
+  .tab-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 6px 4px; cursor: pointer; border: none; background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab-icon { font-size: 20px; }
+  .tab-label { font-size: 9px; font-weight: 500; letter-spacing: 0.03em; color: var(--text-muted); text-transform: uppercase; }
+  .tab-item.active .tab-label { color: var(--purple); }
+
+  /* Section heads */
+  .section-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .section-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+
+  /* Textarea */
+  textarea {
+    width: 100%; border: 1.5px solid var(--border); border-radius: var(--r-sm);
+    padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 13px;
+    line-height: 1.65; color: var(--text-dark); background: white; resize: none;
+  }
+  textarea:focus { outline: none; border-color: var(--purple-mid); }
+  textarea::placeholder { color: var(--text-muted); }
+
+  /* Sparkline bar chart */
+  .spark-bar { display: flex; align-items: flex-end; gap: 4px; height: 44px; }
+  .spark-col { flex: 1; border-radius: 3px 3px 0 0; transition: height 0.6s ease; min-width: 0; }
+
+  /* Scroll area */
+  .scroll-content { flex: 1; overflow-y: auto; padding: 20px; }
+  .scroll-content::-webkit-scrollbar { width: 4px; }
+  .scroll-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation: fadeUp 0.45s ease both; }
+  .fade-up-2 { animation: fadeUp 0.45s 0.1s ease both; }
+  .fade-up-3 { animation: fadeUp 0.45s 0.2s ease both; }
+  .fade-up-4 { animation: fadeUp 0.45s 0.3s ease both; }
+  .fade-up-5 { animation: fadeUp 0.45s 0.4s ease both; }
+
+  /* Breathing animation */
+  @keyframes breathe { 0%,100% { transform: scale(0.6); opacity: 0.5; } 50% { transform: scale(1); opacity: 1; } }
+  .breath-circle {
+    width: 160px; height: 160px; border-radius: 50%;
+    background: radial-gradient(circle, var(--teal-light) 0%, var(--teal) 100%);
+    animation: breathe 8s ease-in-out infinite;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-size: 15px; color: white; font-weight: 300;
+  }
+
+  /* Safety footer */
+  .safety-footer {
+    border-top: 1px solid var(--border-soft); padding-top: 12px; margin-top: 16px;
+  }
+
+  /* Prototype badge */
+  .proto-badge {
+    position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.6); color: rgba(255,255,255,0.7); font-size: 10px;
+    padding: 5px 14px; border-radius: 99px; pointer-events: none; z-index: 999;
+    font-family: 'DM Sans', sans-serif; letter-spacing: 0.04em;
+  }
+
+  /* Pulse FAB */
+  .pulse-fab {
+    position: fixed; bottom: 80px; right: 24px; width: 52px; height: 52px;
+    border-radius: 50%; background: var(--purple); border: none;
+    box-shadow: 0 4px 20px rgba(109,40,217,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; cursor: pointer; z-index: 50;
+    animation: pulse-glow 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 4px 20px rgba(109,40,217,0.3); }
+    50% { box-shadow: 0 4px 30px rgba(109,40,217,0.5); }
+  }
+  .pulse-fab:active { transform: scale(0.93); }
+</style>
+</head>
+<body>
+
+<div id="shell">
+
+  <!-- ══════════════════════════════════════
+       SCREEN 0: Landing
+  ══════════════════════════════════════ -->
+  <div class="screen" id="s0">
+    <div class="scroll-content" style="display:flex;flex-direction:column;justify-content:center;min-height:100%;padding:28px 24px;">
+
+      <div class="fade-up" style="margin-bottom:24px;">
+        <div style="font-size:11px;letter-spacing:0.12em;color:var(--text-muted);text-transform:uppercase;margin-bottom:16px;">For the 1 in 8</div>
+        <h1 style="font-size:30px;line-height:1.2;margin-bottom:12px;">Your mind,<br><em style="color:var(--purple);font-style:normal;">understood.</em></h1>
+        <p style="font-size:15px;line-height:1.7;color:var(--text-mid);max-width:320px;">Mental illness affects 1 in 8 people. Care is reactive, generic, and scarce. NeuroD learns your patterns, finds the real causes, and builds a plan that fits your brain.</p>
+      </div>
+
+      <div class="fade-up-2" style="display:flex;flex-direction:column;gap:14px;margin-bottom:28px;">
+        <div class="card" style="display:flex;gap:14px;align-items:flex-start;padding:16px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-dark);margin-bottom:2px;">Spots what you can't see yet</div>
+            <div class="small">Watches patterns in your mood, sleep, and energy — notices shifts before they become problems.</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;gap:14px;align-items:flex-start;padding:16px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 8.6L15.4 15.4"/><circle cx="18" cy="6" r="3"/><path d="M15.4 8.6L8.6 15.4"/></svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-dark);margin-bottom:2px;">Finds the real why</div>
+            <div class="small">Not just "you feel low" — traces the chain. Office noise → poor sleep → social withdrawal → mood crash.</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;gap:14px;align-items:flex-start;padding:16px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--amber-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          </div>
+          <div>
+            <div style="font-size:14px;font-weight:500;color:var(--text-dark);margin-bottom:2px;">Builds a plan that fits your brain</div>
+            <div class="small">Every recommendation adapts to your neuro profile, your energy today, and what works for people like you.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fade-up-3" style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-primary" onclick="go(1)">Get started — it's free →</button>
+        <div style="text-align:center;padding:6px 0;">
+          <span class="small muted">Already have an account? </span>
+          <button class="btn-ghost" onclick="go(5)" style="font-size:12px;color:var(--purple);">Sign in</button>
+        </div>
+        <div class="small muted" style="text-align:center;padding-top:4px;">Free forever · No ads · Your data stays on your device</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 1: Profile — How your mind works
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s1">
+    <div class="nav">
+      <button class="nav-back" onclick="go(0)">←</button>
+      <div class="nav-title">Your Profile</div>
+      <div class="nav-step">1 of 3</div>
+    </div>
+    <div style="padding:4px 20px 6px;display:flex;gap:4px;">
+      <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="scroll-content">
+      <h2 style="margin-bottom:8px;">How does your<br>mind work?</h2>
+      <p style="margin-bottom:20px;">Select everything that resonates. No diagnosis needed — you can always change this later.</p>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+        <span class="pill pill-outline" onclick="togglePill(this)">🧠 ADHD</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">✦ Autistic</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">📖 Dyslexia</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🎯 Dyspraxia</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🔢 Dyscalculia</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">⚡ Tourette's</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🌊 Sensory SPD</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">♾️ AuDHD</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🤷 Not sure yet</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">💡 Just exploring</span>
+      </div>
+
+      <div class="card-soft" style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase;">Your pronouns</div>
+        <div class="toggle-row">
+          <button class="toggle-btn selected" onclick="selectToggle(this)">they/them</button>
+          <button class="toggle-btn" onclick="selectToggle(this)">she/her</button>
+          <button class="toggle-btn" onclick="selectToggle(this)">he/him</button>
+          <button class="toggle-btn" onclick="selectToggle(this)">other</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:8px;letter-spacing:0.03em;text-transform:uppercase;">How would you like NeuroD to talk to you?</div>
+        <div class="toggle-row">
+          <button class="toggle-btn" onclick="selectToggle(this)">Simple & clear</button>
+          <button class="toggle-btn selected" onclick="selectToggle(this)">Friendly</button>
+          <button class="toggle-btn" onclick="selectToggle(this)">Clinical</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="go(2)">Next: my strengths →</button>
+      <div style="text-align:center;margin-top:10px;"><button class="btn-ghost" onclick="go(2)">Skip for now</button></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 2: Profile — Strengths
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s2">
+    <div class="nav">
+      <button class="nav-back" onclick="go(1)">←</button>
+      <div class="nav-title">My Strengths</div>
+      <div class="nav-step">2 of 3</div>
+    </div>
+    <div style="padding:4px 20px 6px;display:flex;gap:4px;">
+      <div class="dot done"></div><div class="dot active"></div><div class="dot"></div>
+    </div>
+    <div class="scroll-content">
+      <h2 style="margin-bottom:8px;">What are you<br><em style="color:var(--teal);">brilliant</em> at?</h2>
+      <p style="margin-bottom:20px;">Tap everything that feels true. Your plan will lead with these.</p>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;">
+        <span class="pill pill-selected" onclick="togglePill(this)">⚡ Hyperfocus</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🎨 Creative thinking</span>
+        <span class="pill pill-selected" onclick="togglePill(this)">🔍 Pattern recognition</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">💡 Innovative ideas</span>
+        <span class="pill pill-selected" onclick="togglePill(this)">❤️ Deep empathy</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🧩 Systems thinking</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🗣 Verbal expression</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🔮 Intuition</span>
+        <span class="pill pill-selected" onclick="togglePill(this)">🌱 Sensory awareness</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">📐 Visual-spatial</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">📚 Deep knowledge</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🤸 Adaptability</span>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;border-left:3px solid var(--teal);border-radius:0 var(--r) var(--r) 0;">
+        <div style="font-size:12px;color:var(--teal);font-weight:500;margin-bottom:4px;">Your strength profile</div>
+        <div class="strength-row">
+          <span class="strength-tag st-purple">⚡ Hyperfocus</span>
+          <span class="strength-tag st-teal">🔍 Patterns</span>
+          <span class="strength-tag st-rose">❤️ Empathy</span>
+          <span class="strength-tag st-amber">🌱 Sensory</span>
+        </div>
+        <div class="small muted" style="margin-top:8px;">Every recommendation will build on what you're already good at.</div>
+      </div>
+
+      <button class="btn-primary" onclick="go(3)">Next: support needs →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 3: Profile — Support needs
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s3">
+    <div class="nav">
+      <button class="nav-back" onclick="go(2)">←</button>
+      <div class="nav-title">Support Needs</div>
+      <div class="nav-step">3 of 3</div>
+    </div>
+    <div style="padding:4px 20px 6px;display:flex;gap:4px;">
+      <div class="dot done"></div><div class="dot done"></div><div class="dot active"></div>
+    </div>
+    <div class="scroll-content">
+      <h2 style="margin-bottom:8px;">What does <em style="color:var(--amber);">support</em><br>look like for you?</h2>
+      <p style="margin-bottom:20px;">This helps NeuroD adapt every recommendation. No judgement, just understanding.</p>
+
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+        <span class="pill pill-selected" onclick="togglePill(this)">😴 Sleep regulation</span>
+        <span class="pill pill-selected" onclick="togglePill(this)">🔊 Sensory overload</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">📋 Executive function</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">💬 Social battery</span>
+        <span class="pill pill-selected" onclick="togglePill(this)">😰 Anxiety</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">💊 Medication timing</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">📅 Routine building</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🥘 Eating patterns</span>
+        <span class="pill pill-outline" onclick="togglePill(this)">🏥 GP communication</span>
+      </div>
+
+      <div class="card-soft" style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:6px;letter-spacing:0.03em;text-transform:uppercase;">Crisis support</div>
+        <p class="small" style="margin-bottom:10px;">If your wellbeing dips significantly, would you like NeuroD to show support contacts?</p>
+        <div class="toggle-row">
+          <button class="toggle-btn selected" onclick="selectToggle(this)">Yes please</button>
+          <button class="toggle-btn" onclick="selectToggle(this)">Ask me then</button>
+          <button class="toggle-btn" onclick="selectToggle(this)">No thanks</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="go(4)">Create my profile ✦</button>
+      <div class="small muted" style="text-align:center;margin-top:10px;">Encrypted. Stored on your device. Only you can see it.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 4: Profile created
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s4">
+    <div class="scroll-content" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:100%;">
+      <div style="font-size:64px;margin-bottom:20px;" class="fade-up">♾️</div>
+      <h2 class="fade-up-2" style="margin-bottom:10px;">You're set, Alex.</h2>
+      <p class="fade-up-3" style="max-width:280px;margin-bottom:28px;">NeuroD now knows your strengths and how to adapt for your mind. Let's start understanding your patterns.</p>
+
+      <div class="fade-up-4" style="background:var(--purple-light);border-radius:var(--r);padding:16px 20px;margin-bottom:28px;max-width:320px;width:100%;">
+        <div style="font-size:12px;color:var(--purple);font-weight:500;margin-bottom:8px;">Your Profile</div>
+        <div class="strength-row" style="justify-content:center;">
+          <span class="strength-tag st-purple">♾️ AuDHD</span>
+          <span class="strength-tag st-teal">⚡ Hyperfocus</span>
+          <span class="strength-tag st-rose">❤️ Empathy</span>
+          <span class="strength-tag st-amber">🔍 Patterns</span>
+        </div>
+      </div>
+
+      <div class="fade-up-5" style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:8px;">
+        <button class="btn-primary" onclick="go(5)">Go to my dashboard →</button>
+        <button class="btn-secondary" onclick="go(6)">Do my first check-in</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 5: Dashboard
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s5">
+    <div class="celebration">
+      <span style="font-size:16px;">♾️</span>
+      <span><strong>Neurodiversity Month</strong> · Your strengths are being celebrated</span>
+    </div>
+    <div style="padding:16px 20px 8px;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div class="small muted">Good morning</div>
+        <h2 style="font-size:18px;">Alex 👋</h2>
+      </div>
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;color:var(--purple);cursor:pointer;" onclick="go(12)">A</div>
+    </div>
+    <div class="scroll-content" style="padding-top:4px;">
+
+      <!-- Wellbeing snapshot -->
+      <div class="card fade-up" style="margin-bottom:12px;cursor:pointer;" onclick="go(8)">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:56px;height:56px;border-radius:14px;background:var(--amber-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <div style="font-size:13px;font-weight:500;color:var(--text-dark);">What we're noticing</div>
+              <span class="signal-chip sc-watch">Watch</span>
+            </div>
+            <p class="small" style="margin-bottom:4px;">Sleep has been shorter than your usual this week. That's the main signal right now.</p>
+            <div style="font-size:11px;color:var(--purple);font-weight:500;">See full insights →</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly focus -->
+      <div class="card fade-up-2" style="margin-bottom:12px;border-left:3px solid var(--teal);border-radius:0 var(--r) var(--r) 0;cursor:pointer;" onclick="go(9)">
+        <div style="font-size:11px;color:var(--teal);font-weight:500;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">This week's focus</div>
+        <div style="font-size:14px;font-weight:500;color:var(--text-dark);margin-bottom:4px;">Try dimming lights 1 hour before bed</div>
+        <p class="small">Based on your patterns, this one change has the highest chance of improving your sleep and mood this week.</p>
+        <div style="margin-top:8px;font-size:11px;color:var(--purple);">See full plan →</div>
+      </div>
+
+      <!-- Check-in prompt -->
+      <button class="btn-secondary fade-up-3" style="margin-bottom:12px;" onclick="go(6)">📓 How are you today?</button>
+
+      <!-- 7-day mood sparkline -->
+      <div class="card-soft fade-up-4" style="margin-bottom:12px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.04em;">Your mood · last 7 days</div>
+        <div class="spark-bar">
+          <div class="spark-col" style="height:60%;background:var(--border);"></div>
+          <div class="spark-col" style="height:75%;background:var(--teal);"></div>
+          <div class="spark-col" style="height:55%;background:var(--amber);"></div>
+          <div class="spark-col" style="height:45%;background:var(--amber);"></div>
+          <div class="spark-col" style="height:50%;background:var(--amber);"></div>
+          <div class="spark-col" style="height:65%;background:var(--teal);"></div>
+          <div class="spark-col" style="height:70%;background:var(--teal);"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span class="small muted">Mon</span><span class="small muted">Tue</span><span class="small muted">Wed</span><span class="small muted">Thu</span><span class="small muted">Fri</span><span class="small muted">Sat</span><span class="small muted">Sun</span>
+        </div>
+      </div>
+
+      <!-- Data progress -->
+      <div class="card-soft fade-up-5" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:500;color:var(--text-soft);">Your data is building</div>
+          <div style="font-size:11px;color:var(--purple);font-weight:500;">18 of 30 days</div>
+        </div>
+        <div style="height:6px;border-radius:3px;background:var(--border);overflow:hidden;">
+          <div style="width:60%;height:100%;background:var(--purple);border-radius:3px;transition:width 1s ease;"></div>
+        </div>
+        <div class="small muted" style="margin-top:6px;">At 30 days, NeuroD can start finding deeper causes behind your patterns.</div>
+      </div>
+
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item active" onclick="go(5)"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+      <button class="tab-item" onclick="go(6)"><span class="tab-icon">📓</span><span class="tab-label">Check-in</span></button>
+      <button class="tab-item" onclick="go(8)"><span class="tab-icon">📊</span><span class="tab-label">Insights</span></button>
+      <button class="tab-item" onclick="go(9)"><span class="tab-icon">✦</span><span class="tab-label">Plan</span></button>
+      <button class="tab-item" onclick="go(10)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 6: Quick Pulse Check-in
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s6">
+    <div class="nav">
+      <button class="nav-back" onclick="go(5)">←</button>
+      <div class="nav-title">Check-in</div>
+    </div>
+    <div class="scroll-content" style="display:flex;flex-direction:column;">
+      <h2 style="margin-bottom:6px;">How are you<br>right now?</h2>
+      <p style="margin-bottom:24px;">One tap is enough. Or scroll down for more detail.</p>
+
+      <!-- Pulse grid — one tap done -->
+      <div class="pulse-grid" style="margin-bottom:24px;">
+        <button class="pulse-btn" onclick="pulseTap(this,2)">😶‍🌫️<span class="pulse-label">foggy</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,2)">😔<span class="pulse-label">low</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,3)">😰<span class="pulse-label">anxious</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,4)">😕<span class="pulse-label">meh</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,5)">😐<span class="pulse-label">okay</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,6)">🙂<span class="pulse-label">alright</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,7)">😄<span class="pulse-label">good</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,8)">⚡<span class="pulse-label">energised</span></button>
+        <button class="pulse-btn" onclick="pulseTap(this,9)">🌊<span class="pulse-label">flowing</span></button>
+      </div>
+
+      <!-- Saved confirmation (hidden by default) -->
+      <div id="pulse-saved" style="display:none;text-align:center;padding:20px 0;">
+        <div style="font-size:32px;margin-bottom:8px;">✓</div>
+        <div style="font-size:14px;color:var(--teal);font-weight:500;">Saved</div>
+        <div class="small muted" style="margin-top:4px;">That's all you need to do today.</div>
+      </div>
+
+      <div style="border-top:1px solid var(--border-soft);margin-top:auto;padding-top:16px;">
+        <button class="btn-ghost" onclick="go(7)" style="width:100%;text-align:center;color:var(--purple);font-size:13px;">Want to share more detail? →</button>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="go(5)"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+      <button class="tab-item active" onclick="go(6)"><span class="tab-icon">📓</span><span class="tab-label">Check-in</span></button>
+      <button class="tab-item" onclick="go(8)"><span class="tab-icon">📊</span><span class="tab-label">Insights</span></button>
+      <button class="tab-item" onclick="go(9)"><span class="tab-icon">✦</span><span class="tab-label">Plan</span></button>
+      <button class="tab-item" onclick="go(10)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 7: Detailed Check-in
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s7">
+    <div class="nav">
+      <button class="nav-back" onclick="go(6)">←</button>
+      <div class="nav-title">Detailed Check-in</div>
+    </div>
+    <div class="scroll-content">
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:8px;letter-spacing:0.03em;text-transform:uppercase;">Sleep last night</div>
+        <div class="sleep-track">
+          <button class="sleep-btn" onclick="selectSleep(this)">< 5h</button>
+          <button class="sleep-btn" onclick="selectSleep(this)">5–6h</button>
+          <button class="sleep-btn selected" onclick="selectSleep(this)">6–7h</button>
+          <button class="sleep-btn" onclick="selectSleep(this)">7–8h</button>
+          <button class="sleep-btn" onclick="selectSleep(this)">8h+</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:8px;letter-spacing:0.03em;text-transform:uppercase;">Energy today</div>
+        <div class="mood-grid" style="grid-template-columns:repeat(5,1fr);">
+          <button class="mood-btn" onclick="selectMood(this)">🪫<span>empty</span></button>
+          <button class="mood-btn" onclick="selectMood(this)">😮‍💨<span>low</span></button>
+          <button class="mood-btn selected" onclick="selectMood(this)">😐<span>mid</span></button>
+          <button class="mood-btn" onclick="selectMood(this)">🙂<span>good</span></button>
+          <button class="mood-btn" onclick="selectMood(this)">⚡<span>high</span></button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:8px;letter-spacing:0.03em;text-transform:uppercase;">Social contact today</div>
+        <div class="toggle-row">
+          <button class="toggle-btn" onclick="selectToggle(this)">None</button>
+          <button class="toggle-btn selected" onclick="selectToggle(this)">A little</button>
+          <button class="toggle-btn" onclick="selectToggle(this)">Plenty</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:500;color:var(--text-soft);margin-bottom:8px;letter-spacing:0.03em;text-transform:uppercase;">Anything on your mind? <span style="font-weight:400;color:var(--text-muted);">(optional)</span></div>
+        <textarea rows="3" placeholder="Write anything — or leave blank. Both are fine."></textarea>
+      </div>
+
+      <button class="btn-primary" onclick="go(5)">Save check-in</button>
+      <div class="small muted" style="text-align:center;margin-top:10px;">NeuroD analyses your patterns in the background. No extra effort needed.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 8: Insights
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s8">
+    <div class="nav">
+      <button class="nav-back" onclick="go(5)">←</button>
+      <div class="nav-title">Insights</div>
+    </div>
+    <div class="scroll-content">
+
+      <!-- Section: What we're noticing (Early Signals) -->
+      <div style="margin-bottom:20px;">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--purple-light);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg>
+          </div>
+          <h3>What we're noticing</h3>
+        </div>
+
+        <div class="card fade-up" style="margin-bottom:10px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;">
+            <span style="font-size:18px;">😴</span>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:2px;">Your sleep dropped about 1.5 hours below your usual</div>
+              <span class="signal-chip sc-watch" style="margin-top:4px;">Watch · 5 nights running</span>
+            </div>
+          </div>
+          <div class="spark-bar" style="height:32px;">
+            <div class="spark-col" style="height:85%;background:var(--teal);"></div>
+            <div class="spark-col" style="height:80%;background:var(--teal);"></div>
+            <div class="spark-col" style="height:60%;background:var(--amber);"></div>
+            <div class="spark-col" style="height:50%;background:var(--amber);"></div>
+            <div class="spark-col" style="height:45%;background:var(--orange);"></div>
+            <div class="spark-col" style="height:50%;background:var(--amber);"></div>
+            <div class="spark-col" style="height:55%;background:var(--amber);"></div>
+          </div>
+        </div>
+
+        <div class="card fade-up-2" style="margin-bottom:10px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <span style="font-size:18px;">💙</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:2px;">4 days without social contact</div>
+              <span class="signal-chip sc-watch" style="margin-top:4px;">Watch</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card fade-up-3" style="margin-bottom:10px;">
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <span style="font-size:18px;">📉</span>
+            <div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:2px;">Mood has been gradually dipping this week</div>
+              <span class="signal-chip sc-watch" style="margin-top:4px;">Watch · 7-day trend</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="small muted" style="margin-top:6px;">Based on your last 7 days of check-ins.</div>
+      </div>
+
+      <!-- Section: What might be behind it (Root Causes) -->
+      <div style="margin-bottom:20px;">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--teal-light);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 8.6L15.4 15.4"/></svg>
+          </div>
+          <h3>What's behind it</h3>
+          <span style="font-size:10px;color:var(--teal);background:var(--teal-light);padding:2px 8px;border-radius:4px;margin-left:auto;">Early pattern</span>
+        </div>
+
+        <div class="card fade-up-4">
+          <div style="font-size:12px;color:var(--teal);font-weight:500;margin-bottom:12px;">The chain your data suggests:</div>
+
+          <!-- Causal chain -->
+          <div style="margin-bottom:14px;">
+            <div class="causal-step">
+              <div class="causal-node" style="background:var(--amber-light);">🔊</div>
+              <div class="causal-label">Sensory load has been high (noisy environments)</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:2px 0 2px 10px;">
+              <div class="causal-arrow">↓</div>
+              <span class="causal-lag">~2 days later</span>
+            </div>
+            <div class="causal-step">
+              <div class="causal-node" style="background:#FEF3C7;">😴</div>
+              <div class="causal-label">Sleep quality drops (duration may stay similar)</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:2px 0 2px 10px;">
+              <div class="causal-arrow">↓</div>
+              <span class="causal-lag">next day</span>
+            </div>
+            <div class="causal-step">
+              <div class="causal-node" style="background:#FCE7F3;">💙</div>
+              <div class="causal-label">Social energy drains — harder to initiate contact</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding:2px 0 2px 10px;">
+              <div class="causal-arrow">↓</div>
+              <span class="causal-lag">~2 days later</span>
+            </div>
+            <div class="causal-step">
+              <div class="causal-node" style="background:var(--purple-light);">📉</div>
+              <div class="causal-label" style="font-weight:500;color:var(--purple);">Mood dips — but this is the outcome, not the cause</div>
+            </div>
+          </div>
+
+          <div class="card-soft" style="padding:12px;border-left:3px solid var(--teal);border-radius:0 8px 8px 0;">
+            <div style="font-size:11px;color:var(--teal);font-weight:500;margin-bottom:3px;">The insight</div>
+            <p class="small" style="color:var(--text-mid);">The sleep isn't the root cause — the sensory overload is. Your plan now targets that first, rather than just telling you to "sleep more."</p>
+          </div>
+
+          <div class="small muted" style="margin-top:10px;">Early pattern · grows more accurate with more check-ins</div>
+        </div>
+      </div>
+
+      <!-- What this means -->
+      <div style="margin-bottom:16px;">
+        <div class="section-head">
+          <div class="section-icon" style="background:var(--amber-light);">✦</div>
+          <h3>What this means for you</h3>
+        </div>
+        <div class="bubble-ai fade-up-5" style="max-width:100%;margin-bottom:12px;">
+          The data points to <strong>sensory load as your entry point</strong> — not because your mood is "bad" but because your brain processes sensory input more intensely than most. That's not a flaw, it's how AuDHD brains work.<br><br>
+          Your plan has been updated with one small change to try this week. It targets the top of the chain, not the bottom.
+        </div>
+        <button class="btn-primary" onclick="go(9)">See your updated plan →</button>
+      </div>
+
+      <div class="safety-footer">
+        <div class="small muted" style="margin-bottom:4px;">AI-generated insight · Not clinical advice</div>
+        <div class="small" style="color:var(--teal);">Talk to your GP about patterns you notice. Need support now? <strong>Samaritans 116 123</strong></div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="go(5)"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+      <button class="tab-item" onclick="go(6)"><span class="tab-icon">📓</span><span class="tab-label">Check-in</span></button>
+      <button class="tab-item active" onclick="go(8)"><span class="tab-icon">📊</span><span class="tab-label">Insights</span></button>
+      <button class="tab-item" onclick="go(9)"><span class="tab-icon">✦</span><span class="tab-label">Plan</span></button>
+      <button class="tab-item" onclick="go(10)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 9: Your Plan
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s9">
+    <div class="nav">
+      <button class="nav-back" onclick="go(5)">←</button>
+      <div class="nav-title">Your Plan</div>
+      <button class="btn-ghost" style="margin-left:auto;font-size:12px;color:var(--purple);">Refresh</button>
+    </div>
+    <div class="scroll-content">
+
+      <!-- Strengths banner -->
+      <div class="fade-up" style="background:linear-gradient(135deg,#EDE9FE 0%,#CCFBF1 100%);border-radius:var(--r);padding:16px;margin-bottom:14px;">
+        <div class="strength-row" style="margin-bottom:8px;">
+          <span class="strength-tag st-purple">⚡ Hyperfocus</span>
+          <span class="strength-tag st-teal">🔍 Patterns</span>
+          <span class="strength-tag st-rose">❤️ Empathy</span>
+        </div>
+        <h3 style="margin-bottom:4px;font-size:15px;">Your strengths are leading this plan.</h3>
+        <p class="small" style="color:var(--text-mid);">Your ability to spot patterns in your own experience is your biggest asset here. This plan builds on that.</p>
+      </div>
+
+      <!-- Weekly focus -->
+      <div class="card-soft fade-up-2" style="margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+        <div style="font-size:28px;">🎯</div>
+        <div>
+          <div style="font-size:11px;color:var(--teal);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">This week's single focus</div>
+          <div style="font-size:14px;font-weight:500;color:var(--text-dark);">Dim lights 1 hour before bed, just once</div>
+          <div class="small muted">Smallest action · highest expected impact</div>
+        </div>
+      </div>
+
+      <div style="font-size:12px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:10px;">Your 3 personalised actions</div>
+
+      <!-- Interventions -->
+      <div class="intervention fade-up-3">
+        <div class="int-head" onclick="toggleIntervention(this)">
+          <div class="int-icon" style="background:var(--amber-light);">😴</div>
+          <div class="int-title">Sensory wind-down routine</div>
+          <span class="int-effort eff-low">low effort</span>
+          <span style="font-size:14px;color:var(--text-muted);margin-left:6px;">›</span>
+        </div>
+        <div class="int-body">
+          <p style="margin-bottom:8px;">Start a 15-minute sensory de-escalation 60 minutes before bed. Dim lights to warm tones, reduce sound, avoid screens. For AuDHD brains, this helps the nervous system shift out of hyperarousal — the reason sleep feels impossible even when you're exhausted.</p>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">When: every evening · Takes: 15 min</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="pill pill-teal" style="font-size:10px;padding:3px 8px;">AuDHD-adapted</span>
+            <span class="pill" style="background:var(--amber-light);color:var(--amber);border-color:transparent;font-size:10px;padding:3px 8px;">Based on: CBT-I</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="intervention fade-up-4">
+        <div class="int-head" onclick="toggleIntervention(this)">
+          <div class="int-icon" style="background:#FCE7F3;">💙</div>
+          <div class="int-title">Low-stakes social micro-dose</div>
+          <span class="int-effort eff-low">low effort</span>
+          <span style="font-size:14px;color:var(--text-muted);margin-left:6px;">›</span>
+        </div>
+        <div class="int-body">
+          <p style="margin-bottom:8px;">Send one text, voice note, or meme to someone you trust. No obligation to continue the conversation. Your data shows social contact — even minimal — tends to break the withdrawal pattern within 48 hours.</p>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">When: any time this week · Takes: 2 min</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="pill pill-teal" style="font-size:10px;padding:3px 8px;">Autism-adapted</span>
+            <span class="pill" style="background:var(--purple-light);color:var(--purple);border-color:transparent;font-size:10px;padding:3px 8px;">Based on: ACT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="intervention fade-up-5">
+        <div class="int-head" onclick="toggleIntervention(this)">
+          <div class="int-icon" style="background:var(--purple-light);">⚡</div>
+          <div class="int-title">Protect one hyperfocus block</div>
+          <span class="int-effort eff-mid">medium</span>
+          <span style="font-size:14px;color:var(--text-muted);margin-left:6px;">›</span>
+        </div>
+        <div class="int-body">
+          <p style="margin-bottom:8px;">Schedule one 2-hour deep work block this week and protect it like a meeting. Hyperfocus is your most underused strength right now — reactivating it builds momentum and improves next-day energy. Shut notifications, use noise-cancelling if you have them.</p>
+          <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">When: pick one day · Takes: 2 hours</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <span class="pill pill-teal" style="font-size:10px;padding:3px 8px;">ADHD-adapted</span>
+            <span class="pill" style="background:var(--teal-light);color:var(--teal);border-color:transparent;font-size:10px;padding:3px 8px;">Based on: DBT</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Closing message -->
+      <div class="card-soft" style="margin:16px 0;text-align:center;">
+        <div style="font-size:20px;margin-bottom:6px;">✦</div>
+        <p class="small" style="color:var(--purple);font-weight:500;margin-bottom:4px;">Your brain isn't broken.</p>
+        <p class="small muted">It processes the world more intensely than most. These changes reduce unnecessary load so your actual strengths can show up.</p>
+      </div>
+
+      <button class="btn-secondary" onclick="go(10)" style="margin-bottom:16px;">💬 Ask NeuroD to explain any of this</button>
+
+      <div class="safety-footer">
+        <div class="small muted">AI-generated plan · Not clinical advice · Talk to your GP about changes you'd like to make</div>
+      </div>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="go(5)"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+      <button class="tab-item" onclick="go(6)"><span class="tab-icon">📓</span><span class="tab-label">Check-in</span></button>
+      <button class="tab-item" onclick="go(8)"><span class="tab-icon">📊</span><span class="tab-label">Insights</span></button>
+      <button class="tab-item active" onclick="go(9)"><span class="tab-icon">✦</span><span class="tab-label">Plan</span></button>
+      <button class="tab-item" onclick="go(10)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 10: AI Chat
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s10" style="display:flex;flex-direction:column;">
+    <div class="nav" style="flex-shrink:0;">
+      <button class="nav-back" onclick="go(5)">←</button>
+      <div style="width:28px;height:28px;border-radius:50%;background:var(--teal-light);display:flex;align-items:center;justify-content:center;font-size:13px;margin-right:6px;">✦</div>
+      <div>
+        <div class="nav-title" style="font-size:14px;">NeuroD</div>
+        <div style="font-size:10px;color:var(--teal);">Knows your profile · AuDHD adapted</div>
+      </div>
+    </div>
+    <div id="chat-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;">
+      <div class="bubble-ai">Hi Alex. I know your profile, your recent check-ins, and what's been showing up in your patterns. Ask me anything — explain your plan, talk through what's hard, or think out loud.</div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;">Based on your data:</div>
+        <button class="pill pill-outline" style="text-align:left;" onclick="sendChip('Why is sleep harder for AuDHD brains?')">Why is sleep harder for AuDHD brains?</button>
+        <button class="pill pill-outline" style="text-align:left;" onclick="sendChip('Help me talk to my GP about this')">Help me talk to my GP about this</button>
+        <button class="pill pill-outline" style="text-align:left;" onclick="sendChip('I feel overwhelmed right now')">I feel overwhelmed right now</button>
+        <button class="pill pill-outline" style="text-align:left;" onclick="sendChip('Explain my care plan in simpler words')">Explain my plan simply</button>
+      </div>
+      <div id="typing-indicator" class="bubble-ai" style="display:none;"><div class="typing-dots"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);background:var(--cream);flex-shrink:0;display:flex;gap:8px;align-items:flex-end;">
+      <textarea id="chat-input" rows="1" placeholder="Ask anything…" style="flex:1;resize:none;max-height:80px;" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px';" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}"></textarea>
+      <button onclick="sendMsg()" style="width:36px;height:36px;border-radius:50%;background:var(--purple);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">↑</button>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-item" onclick="go(5)"><span class="tab-icon">🏠</span><span class="tab-label">Home</span></button>
+      <button class="tab-item" onclick="go(6)"><span class="tab-icon">📓</span><span class="tab-label">Check-in</span></button>
+      <button class="tab-item" onclick="go(8)"><span class="tab-icon">📊</span><span class="tab-label">Insights</span></button>
+      <button class="tab-item" onclick="go(9)"><span class="tab-icon">✦</span><span class="tab-label">Plan</span></button>
+      <button class="tab-item active" onclick="go(10)"><span class="tab-icon">💬</span><span class="tab-label">Chat</span></button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 11: Crisis
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s11">
+    <div class="scroll-content" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;min-height:100%;background:#1C1917;padding:32px 24px;">
+      <button onclick="go(5)" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.5);width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:16px;">×</button>
+
+      <div class="breath-circle" style="margin-bottom:32px;">
+        <span>breathe</span>
+      </div>
+
+      <p style="color:rgba(255,255,255,0.7);font-family:'Fraunces',serif;font-size:18px;margin-bottom:32px;line-height:1.5;">Right now, you're here.<br>That's enough.</p>
+
+      <div style="width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px;">
+        <a href="tel:116123" style="display:flex;align-items:center;gap:12px;padding:16px;background:rgba(255,255,255,0.08);border-radius:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.1);">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(13,148,136,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">📞</div>
+          <div style="text-align:left;">
+            <div style="color:white;font-size:14px;font-weight:500;">Samaritans: 116 123</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:11px;">Free · 24 hours · No judgement</div>
+          </div>
+        </a>
+        <a href="sms:85258&body=SHOUT" style="display:flex;align-items:center;gap:12px;padding:16px;background:rgba(255,255,255,0.08);border-radius:12px;text-decoration:none;border:1px solid rgba(255,255,255,0.1);">
+          <div style="width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">💬</div>
+          <div style="text-align:left;">
+            <div style="color:white;font-size:14px;font-weight:500;">Text SHOUT to 85258</div>
+            <div style="color:rgba(255,255,255,0.5);font-size:11px;">Free crisis text line</div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 12: Settings
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s12">
+    <div class="nav">
+      <button class="nav-back" onclick="go(5)">←</button>
+      <div class="nav-title">Settings</div>
+    </div>
+    <div class="scroll-content">
+      <div class="card fade-up" style="margin-bottom:16px;text-align:center;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--purple-light);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;color:var(--purple);margin:0 auto 10px;">A</div>
+        <div style="font-size:16px;font-weight:500;color:var(--text-dark);margin-bottom:4px;">Alex</div>
+        <div class="strength-row" style="justify-content:center;margin-bottom:4px;">
+          <span class="strength-tag st-purple" style="font-size:10px;padding:3px 8px;">♾️ AuDHD</span>
+          <span class="strength-tag st-teal" style="font-size:10px;padding:3px 8px;">⚡ Hyperfocus</span>
+          <span class="strength-tag st-rose" style="font-size:10px;padding:3px 8px;">❤️ Empathy</span>
+        </div>
+        <button class="btn-ghost" style="font-size:12px;color:var(--purple);">Edit profile</button>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;padding-left:4px;">Preferences</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-dark);">Reading level</span><span style="font-size:12px;color:var(--purple);">Friendly ›</span></div>
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-dark);">Crisis support</span><span style="font-size:12px;color:var(--teal);">Enabled ›</span></div>
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-dark);">Dark mode</span><span style="font-size:12px;color:var(--text-soft);">Auto ›</span></div>
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-dark);">Notifications</span><span style="font-size:12px;color:var(--text-soft);">On ›</span></div>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;padding-left:4px;">About NeuroD</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="go(13)"><span style="font-size:13px;color:var(--text-dark);">How NeuroD works</span><span style="font-size:12px;color:var(--text-muted);">›</span></div>
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="go(14)"><span style="font-size:13px;color:var(--text-dark);">About NeuroD</span><span style="font-size:12px;color:var(--text-muted);">›</span></div>
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="go(15)"><span style="font-size:13px;color:var(--text-dark);">Privacy &amp; your data</span><span style="font-size:12px;color:var(--text-muted);">›</span></div>
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="go(16)"><span style="font-size:13px;color:var(--text-dark);">Help &amp; FAQ</span><span style="font-size:12px;color:var(--text-muted);">›</span></div>
+        </div>
+      </div>
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;padding-left:4px;">Your data</div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-dark);">Export my data</span><span style="font-size:12px;color:var(--teal);">JSON ↓</span></div>
+          <div style="padding:14px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:#DC2626;">Delete all my data</span><span style="font-size:12px;color:var(--text-muted);">›</span></div>
+          <div style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-soft);">Sign out</span><span style="font-size:12px;color:var(--text-muted);">›</span></div>
+        </div>
+      </div>
+      <div class="small muted" style="text-align:center;">NeuroD v1.0 · Neurodiversity Month 2026</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 13: How NeuroD Works
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s13">
+    <div class="nav">
+      <button class="nav-back" onclick="go(12)">←</button>
+      <div class="nav-title">How NeuroD Works</div>
+    </div>
+    <div class="scroll-content">
+      <h2 class="fade-up" style="margin-bottom:4px;">Three kinds of AI.<br><em style="color:var(--purple);font-style:normal;">One goal.</em></h2>
+      <p class="fade-up" style="margin-bottom:24px;">Here's what's actually happening behind the scenes.</p>
+      <div class="card fade-up-2" style="margin-bottom:14px;border-left:3px solid var(--purple);border-radius:0 var(--r) var(--r) 0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--purple-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M2 12h4l3-9 4 18 3-9h6"/></svg></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--text-dark);">Pattern Recognition AI</div><div style="font-size:11px;color:var(--purple);">Powers "Early Signals"</div></div>
+        </div>
+        <p class="small" style="color:var(--text-mid);margin-bottom:10px;">Every check-in feeds into pattern detection — trend analysis across 7, 14, or 30 days. It spots your sleep drifting or social contact dropping before you're consciously aware.</p>
+        <div class="card-soft" style="padding:10px 12px;">
+          <div style="font-size:11px;font-weight:500;color:var(--teal);">✓ Runs on your device · Works offline · Data never leaves your phone</div>
+        </div>
+      </div>
+      <div class="card fade-up-3" style="margin-bottom:14px;border-left:3px solid var(--teal);border-radius:0 var(--r) var(--r) 0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 8.6L15.4 15.4"/></svg></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--text-dark);">Causal Analysis AI</div><div style="font-size:11px;color:var(--teal);">Powers "Root Causes"</div></div>
+        </div>
+        <p class="small" style="color:var(--text-mid);margin-bottom:10px;">Most apps tell you what happened. NeuroD tells you <em>why</em>. It analyses temporal sequences — what changes first, what follows, with what delay — to find genuine causes, not just correlations.</p>
+        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--border);"></div><span class="small" style="color:var(--text-soft);">Days 1–14: Building baseline</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--amber);"></div><span class="small" style="color:var(--text-soft);">Days 14–30: Correlations found</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple-mid);"></div><span class="small" style="color:var(--text-soft);">Days 30–60: Early causal links</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--teal);"></div><span class="small" style="color:var(--text-soft);">Days 60+: Confident personal causal model</span></div>
+        </div>
+        <div class="card-soft" style="padding:10px 12px;">
+          <div style="font-size:11px;font-weight:500;color:var(--teal);">✓ Progressive · Honest · No fake insights to fill a screen</div>
+        </div>
+      </div>
+      <div class="card fade-up-4" style="margin-bottom:14px;border-left:3px solid var(--amber);border-radius:0 var(--r) var(--r) 0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--amber-light);display:flex;align-items:center;justify-content:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div style="font-size:14px;font-weight:600;color:var(--text-dark);">Generative AI</div><div style="font-size:11px;color:var(--amber);">Powers "Your Plan" &amp; Chat</div></div>
+        </div>
+        <p class="small" style="color:var(--text-mid);margin-bottom:10px;">Translates signals and causes into a plan you can act on — in your language, at your energy level, for your brain type. Adapts to your neuro profile, strengths, and reading preference.</p>
+        <div class="card-soft" style="padding:10px 12px;">
+          <div style="font-size:11px;font-weight:500;color:var(--teal);">✓ Every output labelled AI-generated · Not a therapist</div>
+          <div style="font-size:11px;color:var(--text-muted);">Powered by Claude (Anthropic). Data never used for AI training.</div>
+        </div>
+      </div>
+      <div class="card-soft fade-up-5" style="text-align:center;padding:20px;">
+        <div style="font-size:20px;margin-bottom:8px;">✦</div>
+        <p class="small" style="color:var(--text-dark);font-weight:500;margin-bottom:4px;">Together, these three do something none can do alone.</p>
+        <p class="small" style="color:var(--text-mid);">Pattern recognition spots the signal. Causal analysis finds the lever. Generative AI puts it in your hands.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 14: About NeuroD
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s14">
+    <div class="nav">
+      <button class="nav-back" onclick="go(12)">←</button>
+      <div class="nav-title">About NeuroD</div>
+    </div>
+    <div class="scroll-content">
+      <div class="fade-up" style="margin-bottom:20px;">
+        <div style="font-size:11px;letter-spacing:0.1em;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px;">For the 1 in 8</div>
+        <h2 style="margin-bottom:10px;">Mental illness affects nearly a billion people.</h2>
+        <p>Most will never receive adequate care. For neurodiverse individuals, the gap is wider still.</p>
+      </div>
+      <p class="fade-up-2" style="margin-bottom:20px;">NeuroD exists to close that gap. Not to replace professional care, but to be the companion that watches your patterns when no one else can, finds the real causes behind hard days, and builds a plan that works <em>with</em> your brain.</p>
+      <div style="font-size:12px;font-weight:500;color:var(--text-soft);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">Our principles</div>
+      <div class="card fade-up-3" style="margin-bottom:8px;padding:14px;"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px;">1. Strengths first, always</div><p class="small">Every plan starts with what you're good at.</p></div>
+      <div class="card fade-up-3" style="margin-bottom:8px;padding:14px;"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px;">2. Honest AI</div><p class="small">Not enough data? We say so. No fake insights to fill a screen.</p></div>
+      <div class="card fade-up-4" style="margin-bottom:8px;padding:14px;"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px;">3. The 3am test</div><p class="small">Every feature works when you have almost nothing left to give.</p></div>
+      <div class="card fade-up-4" style="margin-bottom:8px;padding:14px;"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px;">4. Your data is yours</div><p class="small">Encrypted. Never sold. Delete with one button.</p></div>
+      <div class="card fade-up-5" style="margin-bottom:16px;padding:14px;"><div style="font-size:13px;font-weight:500;color:var(--text-dark);margin-bottom:3px;">5. No shame mechanics</div><p class="small">No streaks. No badges. No guilt. NeuroD is here when you come back.</p></div>
+      <div class="card-soft" style="text-align:center;padding:20px;">
+        <div style="font-size:16px;margin-bottom:8px;">♾️</div>
+        <div class="small" style="color:var(--purple);font-weight:500;">Launched during Neurodiversity Month 2026</div>
+        <div class="small muted" style="margin-top:6px;">Built with Claude by Anthropic · Hosted on Vercel · Data by Supabase</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 15: Privacy
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s15">
+    <div class="nav">
+      <button class="nav-back" onclick="go(12)">←</button>
+      <div class="nav-title">Privacy &amp; Your Data</div>
+    </div>
+    <div class="scroll-content">
+      <h2 class="fade-up" style="margin-bottom:16px;">The short version</h2>
+      <div class="card fade-up" style="margin-bottom:20px;">
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--teal);font-size:14px;flex-shrink:0;">✓</span><span class="small" style="color:var(--text-mid);">Check-ins stored on your device first, then encrypted in the cloud</span></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--teal);font-size:14px;flex-shrink:0;">✓</span><span class="small" style="color:var(--text-mid);">Never sold, shared with advertisers, or used to train AI</span></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--teal);font-size:14px;flex-shrink:0;">✓</span><span class="small" style="color:var(--text-mid);">AI processing on secure servers — used only for your response</span></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--teal);font-size:14px;flex-shrink:0;">✓</span><span class="small" style="color:var(--text-mid);">Export all your data or delete it permanently, any time</span></div>
+          <div style="display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--teal);font-size:14px;flex-shrink:0;">✓</span><span class="small" style="color:var(--text-mid);">UK GDPR compliant · No ads, ever</span></div>
+        </div>
+      </div>
+      <h3 style="margin-bottom:12px;">Full details</h3>
+      <div class="intervention fade-up-2"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">What data we collect</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Profile info you enter. Journal check-ins. Usage patterns (capacity inference only). <strong>We don't collect:</strong> location, contacts, photos, or microphone audio.</p></div></div>
+      <div class="intervention fade-up-3"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Where your data lives</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p><strong>Device:</strong> IndexedDB (offline). <strong>Cloud:</strong> Supabase with row-level security. <strong>AI:</strong> Anthropic API, encrypted, not retained.</p></div></div>
+      <div class="intervention fade-up-4"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Who can see your data</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>You. That's it. Engineers can't access individual data. No third parties, analytics companies, or advertisers.</p></div></div>
+      <div class="intervention fade-up-5"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Your GDPR rights</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Access & export (JSON). Permanent deletion. Disable AI features individually. DPO: dpo@neurod.app · ICO (UK).</p></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       SCREEN 16: Help & FAQ
+  ══════════════════════════════════════ -->
+  <div class="screen hidden" id="s16">
+    <div class="nav">
+      <button class="nav-back" onclick="go(12)">←</button>
+      <div class="nav-title">Help &amp; FAQ</div>
+    </div>
+    <div class="scroll-content">
+      <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Getting started</div>
+      <div class="intervention fade-up"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Do I need a diagnosis?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>No. "Not sure yet" and "Just exploring" give you full access from day one.</p></div></div>
+      <div class="intervention fade-up"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">How often should I check in?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Whenever feels right. Daily is best for insights, but no penalty for gaps. No streaks. No guilt.</p></div></div>
+      <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px;">Insights</div>
+      <div class="intervention fade-up-2"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Why "building your baseline"?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>NeuroD needs 14+ check-ins to spot patterns. We'd rather show nothing than something unreliable.</p></div></div>
+      <div class="intervention fade-up-2"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">How is this different from a mood tracker?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Mood trackers show what happened. NeuroD shows <em>why</em> — and where to intervene. "Your mood is low" vs "sensory overload 2 days ago caused this."</p></div></div>
+      <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px;">Your plan</div>
+      <div class="intervention fade-up-3"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Who writes my care plan?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Claude (Anthropic), given your profile, strengths, check-ins, and patterns. Every output labelled AI-generated.</p></div></div>
+      <div class="intervention fade-up-3"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Is this medical advice?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>No. NeuroD is a support tool. Always talk to your GP about care changes.</p></div></div>
+      <div class="intervention fade-up-4"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Why only one weekly focus?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Multiple priorities overwhelm executive function. One thing done is worth three things planned.</p></div></div>
+      <div style="font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin:16px 0 8px;">Technical</div>
+      <div class="intervention fade-up-4"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Does it work offline?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Yes. Check-ins save locally and sync when you're back online.</p></div></div>
+      <div class="intervention fade-up-5"><div class="int-head" onclick="toggleIntervention(this)"><div class="int-title" style="font-size:13px;">Can I install it on my phone?</div><span style="font-size:14px;color:var(--text-muted);">›</span></div><div class="int-body"><p>Yes — "Add to Home Screen" from your browser. Works like a native app, no store needed.</p></div></div>
+      <div class="safety-footer">
+        <div class="small muted">Can't find your answer?</div>
+        <button class="btn-secondary" onclick="go(10)" style="margin-top:8px;font-size:13px;">💬 Ask NeuroD</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="proto-badge">Interactive Prototype · NeuroD</div>
+
+<script>
+  let current = 0;
+  const screens = document.querySelectorAll('.screen');
+
+  function go(n) {
+    const prev = current;
+    screens[prev].classList.add('hidden');
+    screens[prev].classList.remove('prev');
+    if (n > prev) screens[prev].classList.add('prev');
+    screens[n].classList.remove('hidden', 'prev');
+    screens[n].scrollTop = 0;
+    current = n;
+  }
+
+  function togglePill(el) { el.classList.toggle('pill-selected'); el.classList.toggle('pill-outline'); }
+  function selectToggle(el) { el.closest('.toggle-row').querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('selected')); el.classList.add('selected'); }
+  function selectMood(el) { el.closest('.mood-grid').querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected')); el.classList.add('selected'); }
+  function selectSleep(el) { document.querySelectorAll('.sleep-btn').forEach(b => b.classList.remove('selected')); el.classList.add('selected'); }
+
+  function toggleIntervention(head) {
+    const body = head.nextElementSibling;
+    body.classList.toggle('open');
+    const arrow = head.querySelector('span:last-child');
+    if (arrow) arrow.style.transform = body.classList.contains('open') ? 'rotate(90deg)' : '';
+  }
+
+  function pulseTap(el, score) {
+    document.querySelectorAll('.pulse-btn').forEach(b => { b.style.opacity = '0.4'; b.style.transform = 'scale(0.95)'; });
+    el.style.opacity = '1';
+    el.style.transform = 'scale(1.08)';
+    el.style.background = 'var(--teal-light)';
+    el.style.borderColor = 'var(--teal)';
+    setTimeout(() => {
+      document.querySelector('.pulse-grid').style.display = 'none';
+      document.getElementById('pulse-saved').style.display = 'block';
+    }, 400);
+    if (score <= 3) setTimeout(() => go(11), 1500); // trigger crisis for demo
+  }
+
+  // Chat
+  const chatResponses = {
+    'Why is sleep harder for AuDHD brains?': `AuDHD brains have a few specific reasons sleep is harder:\n\n<strong>Sensory hypersensitivity</strong> — sounds, light, temperature, textures that others filter out stay distracting for you.\n\n<strong>Delayed circadian rhythm</strong> — many ADHD brains naturally run 1–2 hours later than average.\n\n<strong>Hyperarousal</strong> — the brain struggles to switch off the day's thoughts.\n\nFor your profile specifically, the sensory wind-down in your plan targets the first one — which your check-in data suggests is the biggest factor right now.`,
+    'Help me talk to my GP about this': `Here's what tends to work:\n\n<strong>Bring numbers, not feelings.</strong> "My sleep has averaged under 6 hours for 5 nights" lands differently to "I haven't been sleeping well."\n\n<strong>Lead with impact.</strong> "It's affecting my ability to work and my social life" gets more attention.\n\n<strong>Name your neurodivergence early.</strong> "As someone with ADHD and Autism, sleep dysregulation affects me differently..." signals you understand your own profile.\n\nWould you like me to draft a brief note you could show your GP?`,
+    'I feel overwhelmed right now': `I hear you. Your nervous system is at capacity right now — that's not failure, that's information.\n\nTry this:\n\n<strong>Box breathing — 4 counts each:</strong>\nIn... 2... 3... 4\nHold... 2... 3... 4\nOut... 2... 3... 4\nHold... 2... 3... 4\n\nThis activates your parasympathetic system — it works regardless of brain type.\n\nIf you're in distress, please reach out:\n<strong>Samaritans: 116 123</strong> (free, 24/7)\n\nWhen you're ready, tell me what's piling up and we can look at it together.`,
+    'Explain my care plan in simpler words': `Your plan has 3 things. Here they are, as simple as possible:\n\n<strong>1. Dim lights before bed.</strong> Your brain is extra sensitive to light. Dimming it an hour before bed helps it wind down. Try it once this week.\n\n<strong>2. Text one person.</strong> Send a message — a meme counts. Your data shows even tiny social contact helps your mood within 2 days.\n\n<strong>3. Block 2 hours for deep work.</strong> Your hyperfocus is a superpower that hasn't been used recently. One session can shift your energy for the next day.\n\nThat's it. One of these, once. Not all three every day.`,
+  };
+
+  function sendChip(text) { document.getElementById('chat-input').value = text; sendMsg(); }
+
+  function sendMsg() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+    input.style.height = 'auto';
+    const msgs = document.getElementById('chat-messages');
+
+    const userBubble = document.createElement('div');
+    userBubble.className = 'bubble-user';
+    userBubble.textContent = text;
+    msgs.appendChild(userBubble);
+
+    const typing = document.getElementById('typing-indicator');
+    typing.style.display = 'flex';
+    msgs.scrollTop = msgs.scrollHeight;
+
+    setTimeout(() => {
+      typing.style.display = 'none';
+      const response = chatResponses[text] || `Based on your AuDHD profile and recent check-ins, here's what I'm seeing:\n\nThis connects to what we've been tracking — your sensory load has been high this week, and that's rippling through your sleep and social energy. Let's look at this together.\n\nWhat part feels most pressing right now?\n\n<em style="color:var(--text-muted);font-size:11px;">AI-generated · Not clinical advice</em>`;
+      const aiBubble = document.createElement('div');
+      aiBubble.className = 'bubble-ai';
+      aiBubble.innerHTML = response.replace(/\n/g, '<br>');
+      msgs.appendChild(aiBubble);
+      msgs.scrollTop = msgs.scrollHeight;
+    }, 1200);
+  }
+</script>
+</body>
+</html>

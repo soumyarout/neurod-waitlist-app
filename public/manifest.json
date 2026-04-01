@@ -1,0 +1,13 @@
+{
+  "name": "NeuroD",
+  "short_name": "NeuroD",
+  "description": "Your mind, understood. Not fixed — supported.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF8F4",
+  "theme_color": "#6D28D9",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
